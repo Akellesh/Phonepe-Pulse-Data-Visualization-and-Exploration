@@ -76,7 +76,7 @@ top_user_df = pd.DataFrame(table9, columns=("States", "Years", "Quarter", "Pinco
 
 # Analysis functions
 # Transaction_Year_wise
-def transaction_amount_count_y(df, year):
+def transaction_amount_count_y(df, year, key_suffix=""):
     tac_year = df[df["Years"] == year]
     tac_year.reset_index(drop=True, inplace=True)
 
@@ -85,10 +85,10 @@ def transaction_amount_count_y(df, year):
     col1,col2 = st.columns(2)
     with col1:
         fig_amount = px.bar(tac_year_g,x="States",y="Transaction_amount", title=f"TRANSACTION AMOUNT:BAR CHART, FOR THE YEAR: {year}")
-        st.plotly_chart(fig_amount)
+        st.plotly_chart(fig_amount, key=f"chart_amount_{key_suffix}")
     with col2:
         fig_count = px.bar(tac_year_g,x="States",y="Transaction_count", title=f"TRANSACTION COUNT:BAR CHART, FOR THE YEAR: {year}")
-        st.plotly_chart(fig_count)
+        st.plotly_chart(fig_count, key=f"chart_count_{key_suffix}")
 
     india_geo_url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
     response = requests.get(india_geo_url)
@@ -107,7 +107,7 @@ def transaction_amount_count_y(df, year):
                                     hover_name="States", title=f"TRANSACTION AMOUNT:GEO CHART, FOR THE YEAR: {year}",
                                     fitbounds="locations", height=600, width=600)
         fig_india_1.update_geos(visible=False, fitbounds="locations")
-        st.plotly_chart(fig_india_1)
+        st.plotly_chart(fig_india_1, key=f"india_y_chart_1_{key_suffix}")
 
     with col4:
         fig_india_2 = px.choropleth(tac_year_g, geojson=response_data, locations="States", featureidkey="properties.ST_NM",
@@ -119,11 +119,11 @@ def transaction_amount_count_y(df, year):
         fig_india_2.update_geos(visible=False, fitbounds="locations")
 
         # fig_india_2.show()
-        st.plotly_chart(fig_india_2)
+        st.plotly_chart(fig_india_2, key=f"india_y_chart_2_{key_suffix}")
     return tac_year
 
 # Transaction_Year_wise
-def transaction_amount_count_y_q(df, quarter):
+def transaction_amount_count_y_q(df, quarter, key_suffix=""):
     tac_year_q = df[df["Quarter"] == quarter]
     tac_year_q.reset_index(drop=True, inplace=True)
 
@@ -134,12 +134,12 @@ def transaction_amount_count_y_q(df, quarter):
         fig_amount = px.bar(tac_year_q_g,x="States",y="Transaction_amount",
                             title=f"TRANSACTION AMOUNT:BAR CHART, FOR THE YEAR: {tac_year_q['Years'].min()} AND QUARTER: {quarter}",
                             height= 700, width=700)
-        st.plotly_chart(fig_amount)
+        st.plotly_chart(fig_amount, key=f"chart_amount_{key_suffix}")
     with col2:
         fig_count = px.bar(tac_year_q_g,x="States",y="Transaction_count",
                            title=f"TRANSACTION COUNT:BAR CHART, FOR THE YEAR: {tac_year_q['Years'].min()} AND QUARTER: {quarter}",
                            height= 700, width=700)
-        st.plotly_chart(fig_count)
+        st.plotly_chart(fig_count, key=f"chart_count_{key_suffix}")
 
     india_geo_url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
     response = requests.get(india_geo_url)
@@ -157,7 +157,7 @@ def transaction_amount_count_y_q(df, quarter):
                                     hover_name="States", fitbounds="locations", height= 600, width=600,
                                     title=f"TRANSACTION AMOUNT:GEO CHART, FOR THE YEAR: {tac_year_q['Years'].min()} AND QUARTER: {quarter}")
         fig_india_1.update_geos(visible=False, fitbounds="locations",projection_scale=2.0)
-        st.plotly_chart(fig_india_1)
+        st.plotly_chart(fig_india_1, key=f"india_q_chart_1_{key_suffix}")
 
     with col4:
         fig_india_2 = px.choropleth(tac_year_q_g, geojson=response_data, locations="States", featureidkey="properties.ST_NM",
@@ -166,7 +166,7 @@ def transaction_amount_count_y_q(df, quarter):
                                     hover_name="States", fitbounds="locations", height= 600, width=600,
                                     title=f"TRANSACTION COUNT:GEO CHART, FOR THE YEAR: {tac_year_q['Years'].min()} QUARTER: {quarter} ")
         fig_india_2.update_geos(visible=False, fitbounds="locations",projection_scale=2.0)
-        st.plotly_chart(fig_india_2)
+        st.plotly_chart(fig_india_2, key=f"india_q_chart_2_{key_suffix}")
     return tac_year_q
 
 # Transaction_Year_wise_transaction_Type_wise
@@ -289,8 +289,6 @@ def top_ins_tac_y_s(df, state):
     tins_year_s = df[df["States"] == state]
     tins_year_s.reset_index(drop=True, inplace=True)
 
-    # tins_year_s_g = tins_year_s.groupby("Pincodes")[["Transaction_count", "Transaction_amount"]].sum()
-    # tins_year_s_g.reset_index(inplace=True)
     col1, col2 = st.columns(2)
     with col1:
         fig_topins_barc_1 = px.bar(tins_year_s, x="Quarter", y="Transaction_count", hover_data="Pincodes",width=900, height=800,
@@ -311,11 +309,21 @@ def top_user_tac_y(df, year):
     topu_year_g = pd.DataFrame(topu_year.groupby(["States", "Quarter"])["RegisteredUsers"].sum())
     topu_year_g.reset_index(inplace=True)
 
-    fig_topu_bar_1 = px.bar(topu_year_g, x="States", y="RegisteredUsers", color="Quarter", width=900, height=800,
+    fig_topu_barc_1 = px.bar(topu_year_g, x="States", y="RegisteredUsers", color="Quarter", width=900, height=800,
                        title=f"BAR CHART:REGISTERED_USERS FOR THE YEAR: {year}", hover_name= "States",
                              color_discrete_sequence=px.colors.sequential.Rainbow)
-    st.plotly_chart(fig_topu_bar_1)
+    st.plotly_chart(fig_topu_barc_1)
     return topu_year
+
+# Function for Top User Year Wise State Analysis
+def top_user_tac_y_s(df, state):
+    tuser_year_s = df[df["States"] == state]
+    tuser_year_s.reset_index(drop=True, inplace=True)
+
+    fig_topu_barc_2 = px.bar(tuser_year_s, x="Quarter", y="RegisteredUsers", hover_data="Pincodes",width=900, height=800,
+                       title=f"BAR CHART:REGISTERED_USER, PINCODES,  FOR THE YEAR {df['Years'].min()}", color="RegisteredUsers",
+                       color_discrete_sequence=px.colors.sequential.Magenta)
+    st.plotly_chart(fig_topu_barc_2)
 
 # Streamlit Section
 
@@ -338,14 +346,14 @@ elif select == "Data Exploration":
                 years = st.slider("Select the years", aggregated_insurance_df["Years"].min(),
                                   aggregated_insurance_df["Years"].max(), aggregated_insurance_df["Years"].min())
                 # years = st.selectbox("Select the years", aggregated_insurance_df["Years"].unique())
-            tac_year_filtered = transaction_amount_count_y(aggregated_insurance_df, years)
+            tac_year_filtered = transaction_amount_count_y(aggregated_insurance_df, years, key_suffix="AIABC")
 
             # Bar Chart and India Map Chart for Quarters
             col1, col2 = st.columns(2)
             with col1:
                 quarters= st.slider("Select the quarters", tac_year_filtered["Quarter"].min(),tac_year_filtered["Quarter"].max(),
                                     tac_year_filtered["Quarter"].min())
-            transaction_amount_count_y_q(tac_year_filtered, quarters)
+            transaction_amount_count_y_q(tac_year_filtered, quarters, key_suffix="AIAIM")
 
         elif method_1 == "Aggregated Transaction Analysis":
             st.write("Year Wise Analysis for Every States:")
@@ -354,7 +362,7 @@ elif select == "Data Exploration":
             with col1:
                 years = st.slider("Select the years", aggregated_transaction_df["Years"].min(),
                                   aggregated_transaction_df["Years"].max(), aggregated_transaction_df["Years"].min())
-            agg_tran_tac_year_filtered = transaction_amount_count_y(aggregated_transaction_df, years)
+            agg_tran_tac_year_filtered = transaction_amount_count_y(aggregated_transaction_df, years, key_suffix="ATABC")
 
             # Pie Chart for Years based on Transaction Type
             col1, col2 = st.columns(2)
@@ -364,13 +372,14 @@ elif select == "Data Exploration":
             aggr_tran_transaction_type(agg_tran_tac_year_filtered, state)
 
             st.write("Quarter Wise Analysis for Every States of the Above Selected Year:")
+
             # Bar Chart and India Map Chart for Quarters
             col1, col2 = st.columns(2)
             with col1:
                 quarters = st.slider("Select the quarters", agg_tran_tac_year_filtered["Quarter"].min(),
                                      agg_tran_tac_year_filtered["Quarter"].max(),
                                      agg_tran_tac_year_filtered["Quarter"].min())
-            agg_tran_tac_y_q_filtered = transaction_amount_count_y_q(agg_tran_tac_year_filtered, quarters)
+            agg_tran_tac_y_q_filtered = transaction_amount_count_y_q(agg_tran_tac_year_filtered, quarters, key_suffix="QATA")
 
             # Pie Chart for Year and Quarter based on Transaction Type
             col1, col2 = st.columns(2)
@@ -408,7 +417,7 @@ elif select == "Data Exploration":
                 years = st.slider("Select the years for Map Insurance Analysis", map_insurance_df["Years"].min(),
                                   map_insurance_df["Years"].max(), map_insurance_df["Years"].min())
 
-            map_ins_tac_year_filtered = transaction_amount_count_y(map_insurance_df, years)
+            map_ins_tac_year_filtered = transaction_amount_count_y(map_insurance_df, years, key_suffix="YMIABC")
 
             col1, col2 = st.columns(2)
             with col1:
@@ -422,7 +431,7 @@ elif select == "Data Exploration":
                                      map_ins_tac_year_filtered["Quarter"].min(),
                                      map_ins_tac_year_filtered["Quarter"].max(),
                                      map_ins_tac_year_filtered["Quarter"].min())
-            map_ins_tac_y_q_filtered = transaction_amount_count_y_q(map_ins_tac_year_filtered, quarters)
+            map_ins_tac_y_q_filtered = transaction_amount_count_y_q(map_ins_tac_year_filtered, quarters, key_suffix="QMIA")
 
             col1, col2 = st.columns(2)
             with col1:
@@ -433,11 +442,12 @@ elif select == "Data Exploration":
 
         elif method_2 == "Map Transaction Analysis":
             col1, col2 = st.columns(2)
+            #Bar Chart
             with col1:
                 years = st.slider("Select the years for Map Transaction Analysis", map_transaction_df["Years"].min(),
                                   map_transaction_df["Years"].max(), map_transaction_df["Years"].min())
 
-            map_trans_tac_year_filtered = transaction_amount_count_y(map_transaction_df, years)
+            map_trans_tac_year_filtered = transaction_amount_count_y(map_transaction_df, years, key_suffix="MTAYBC")
 
             col1, col2 = st.columns(2)
             with col1:
@@ -446,12 +456,13 @@ elif select == "Data Exploration":
             map_ins_district_y(map_trans_tac_year_filtered, state)
 
             col1, col2 = st.columns(2)
+
             with col1:
                 quarters = st.slider("Select the quarters for Quarter Wise District Analysis MP",
                                      map_trans_tac_year_filtered["Quarter"].min(),
                                      map_trans_tac_year_filtered["Quarter"].max(),
                                      map_trans_tac_year_filtered["Quarter"].min())
-            map_trans_y_q_filtered = transaction_amount_count_y_q(map_trans_tac_year_filtered, quarters)
+            map_trans_y_q_filtered = transaction_amount_count_y_q(map_trans_tac_year_filtered, quarters, key_suffix="QMTA")
 
             col1, col2 = st.columns(2)
             with col1:
@@ -487,49 +498,59 @@ elif select == "Data Exploration":
 
             col1, col2 = st.columns(2)
             with col1:
-                years = st.slider("Select the years for TI Analysis", top_insurance_df["Years"].min(),
+                years_ti = st.slider("Select the years for TI Analysis", top_insurance_df["Years"].min(),
                                   top_insurance_df["Years"].max(), top_insurance_df["Years"].min())
-            top_ins_tac_y_filtered = transaction_amount_count_y(top_insurance_df, years)
+            top_ins_tac_y_filtered = transaction_amount_count_y(top_insurance_df, years_ti, key_suffix="TIAYBC")
 
             col1, col2 = st.columns(2)
             with col1:
-                state = st.selectbox("Select the State for Pincodes Wise District Analysis TI",
+                state_ti = st.selectbox("Select the State for Pincodes Wise District Analysis TI",
                                      top_ins_tac_y_filtered["States"].unique())
-            top_ins_tacy_s_filtered = top_ins_tac_y_s(top_ins_tac_y_filtered, state)
+            top_ins_tacy_s_filtered = top_ins_tac_y_s(top_ins_tac_y_filtered, state_ti)
 
             col1, col2 = st.columns(2)
             with col1:
-                quarters = st.slider("Select the Quarter for TI Analysis", top_ins_tac_y_filtered["Quarter"].min(),
+                quarters_ti = st.slider("Select the Quarter for TI Analysis", top_ins_tac_y_filtered["Quarter"].min(),
                                   top_ins_tac_y_filtered["Quarter"].max(), top_ins_tac_y_filtered["Quarter"].min())
-            top_ins_tac_y_q_filtered = transaction_amount_count_y_q(top_ins_tac_y_filtered, quarters)
+            top_ins_tac_y_q_filtered = transaction_amount_count_y_q(top_ins_tac_y_filtered, quarters_ti, key_suffix="TIAQ")
 
         elif method_3 == "Top Transaction Analysis":
+
             col1, col2 = st.columns(2)
             with col1:
-                years = st.slider("Select the years for TT Analysis", top_transaction_df["Years"].min(),
+                years_tt = st.slider("Select the years for TT Analysis", top_transaction_df["Years"].min(),
                                   top_transaction_df["Years"].max(), top_transaction_df["Years"].min())
-            top_trans_tac_y_filtered = transaction_amount_count_y(top_transaction_df, years)
+            top_trans_tac_y_filtered = transaction_amount_count_y(top_transaction_df, years_tt, key_suffix="TTAYBC")
 
             col1, col2 = st.columns(2)
             with col1:
-                state = st.selectbox("Select the State for Pincodes Wise District Analysis TT",
+                state_tt = st.selectbox("Select the State for Pincodes Wise District Analysis TT",
                                      top_trans_tac_y_filtered["States"].unique())
-            top_trans_tacy_s_filtered = top_ins_tac_y_s(top_trans_tac_y_filtered, state)
+            top_trans_tacy_s_filtered = top_ins_tac_y_s(top_trans_tac_y_filtered, state_tt)
 
             col1, col2 = st.columns(2)
             with col1:
-                quarters = st.slider("Select the Quarter for TT Analysis", top_trans_tac_y_filtered["Quarter"].min(),
+                quarters_tt = st.slider("Select the Quarter for TT Analysis", top_trans_tac_y_filtered["Quarter"].min(),
                                      top_trans_tac_y_filtered["Quarter"].max(), top_trans_tac_y_filtered["Quarter"].min())
-            top_tran_tac_y_q_filtered = transaction_amount_count_y_q(top_trans_tac_y_filtered, quarters)
+            top_tran_tac_y_q_filtered = transaction_amount_count_y_q(top_trans_tac_y_filtered, quarters_tt, key_suffix="TTAQ")
 
 
         elif method_3 == "Top User Analysis":
             col1, col2 = st.columns(2)
             with col1:
-                years = st.slider("Select the years for TU Analysis", top_user_df["Years"].min(),
+                years_tu = st.slider("Select the years for TU Analysis", top_user_df["Years"].min(),
                                   top_user_df["Years"].max(), top_user_df["Years"].min())
-            top_user_year_filtered = top_user_tac_y(top_user_df, years)
+            top_user_year_filtered = top_user_tac_y(top_user_df, years_tu)
 
+            col1, col2 = st.columns(2)
+            with col1:
+                state_tu = st.selectbox("Select the State for Year Wise TU Analysis",
+                                     top_user_year_filtered["States"].unique())
+            top_user_tac_y_s(top_user_year_filtered, state_tu)
 
 elif select == "Top Charts":
-    pass
+
+    analyse_question = st.selectbox("Select the question you want to analyse",[
+                                    "1. Transaction Amount and Count of Aggregate Insurance",
+                                    "2. Transaction Amount and Count of Map Insurance",
+                                    "3. Transaction Amount and Count of Top Insurance"])
